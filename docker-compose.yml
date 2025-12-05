@@ -1,7 +1,21 @@
 services:
   mongodb:
     image: mongo:latest
-    container_name: mongodb
+    container_name: mongodb-ingestion
     restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: iliass
+      MONGO_INITDB_ROOT_PASSWORD: iliass
+    networks:
+      - movie-recommendation-network
+    volumes:
+      - mongo-data-ingestion-volume:/data/db
     ports:
       - "27017:27017"
+
+networks:
+  movie-recommendation-network:
+    driver: bridge
+
+volumes:
+  mongo-data-ingestion-volume:
