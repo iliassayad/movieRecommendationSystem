@@ -11,6 +11,3 @@ spring:
     job:
       enabled: false
 
-  profiles:
-    active: dev
-
