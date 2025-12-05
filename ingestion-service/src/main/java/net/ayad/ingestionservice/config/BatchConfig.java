@@ -19,6 +19,7 @@ import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.domain.Sort;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -41,7 +42,7 @@ public class BatchConfig {
     public FlatFileItemReader<Link> linkItemReader() {
         return new FlatFileItemReaderBuilder<Link>()
                 .name("linkItemReader")
-                .resource(new FileSystemResource("src/main/resources/links.csv"))
+                .resource(new ClassPathResource("links.csv"))
                 .linesToSkip(1)
                 .delimited()
                 .names("movieId", "imdbId", "tmdbId")
@@ -78,7 +79,7 @@ public class BatchConfig {
     public FlatFileItemReader<Rating> ratingItemReader() {
         return new FlatFileItemReaderBuilder<Rating>()
                 .name("ratingItemReader")
-                .resource(new FileSystemResource("src/main/resources/ratings.csv"))
+                .resource(new ClassPathResource("ratings.csv"))
                 .linesToSkip(1)
                 .delimited()
                 .names("userId", "movieId", "rating", "timestamp")
@@ -88,7 +89,7 @@ public class BatchConfig {
 
     @Bean
     public RatingItemProcessor ratingItemProcessor() {
-        return new RatingItemProcessor();
+        return new RatingItemProcessor(ratingRepository);
     }
 
     @Bean
@@ -147,13 +148,6 @@ public class BatchConfig {
                 .skipLimit(Integer.MAX_VALUE)
                 .build();
     }
-
-
-
-
-
-
-
 
     @Bean
     public Job linkJob() {
