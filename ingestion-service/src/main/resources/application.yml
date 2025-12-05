@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: ingestion-service
+
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/ingestiondb
+      database: ingestiondb
+
+  batch:
+    job:
+      enabled: false
+
