@@ -1,16 +1,3 @@
 spring:
-  application:
-    name: ingestion-service
-
-  data:
-    mongodb:
-      uri: mongodb://iliass:iliass@localhost:27017/ingestiondb?authSource=admin
-      database: ingestiondb
-
-  batch:
-    job:
-      enabled: false
-
   profiles:
     active: dev
-

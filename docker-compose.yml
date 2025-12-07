@@ -12,6 +12,21 @@ services:
       - mongo-data-ingestion-volume:/data/db
     ports:
       - "27017:27017"
+  ingestion-service:
+    image: ingestion-service:latest
+    container_name: ingestion-service
+    build:
+      context: ./ingestion-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      - mongodb
+    networks:
+      - movie-recommendation-network
+    ports:
+      - "8081:8080"
 
 networks:
   movie-recommendation-network:
@@ -19,3 +34,4 @@ networks:
 
 volumes:
   mongo-data-ingestion-volume:
+

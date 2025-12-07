@@ -8,6 +8,7 @@ import net.ayad.ingestionservice.entity.Rating;
 import net.ayad.ingestionservice.repository.LinkRepository;
 import net.ayad.ingestionservice.repository.MovieRepository;
 import net.ayad.ingestionservice.repository.RatingRepository;
+import net.ayad.ingestionservice.service.S3CsvService;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
@@ -32,6 +33,7 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class BatchConfig {
 
+    private final S3CsvService s3CsvService;
     private final MovieRepository movieRepository;
     private final LinkRepository linkRepository;
     private final RatingRepository ratingRepository;
@@ -39,10 +41,10 @@ public class BatchConfig {
     private final PlatformTransactionManager transactionManager;
 
     @Bean
-    public FlatFileItemReader<Link> linkItemReader() {
+    public FlatFileItemReader<Link> linkItemReader(S3CsvService s3CsvService) {
         return new FlatFileItemReaderBuilder<Link>()
                 .name("linkItemReader")
-                .resource(new ClassPathResource("links.csv"))
+                .resource(s3CsvService.getLatestFile("links"))
                 .linesToSkip(1)
                 .delimited()
                 .names("movieId", "imdbId", "tmdbId")
@@ -69,17 +71,17 @@ public class BatchConfig {
     public Step linkStep(){
         return new StepBuilder("linkStep", jobRepository)
                 .<Link, Link>chunk(100, transactionManager)
-                .reader(linkItemReader())
+                .reader(linkItemReader(s3CsvService))
                 .processor(linkItemProcessor())
                 .writer(repositoryItemWriter())
                 .build();
     }
 
     @Bean
-    public FlatFileItemReader<Rating> ratingItemReader() {
+    public FlatFileItemReader<Rating> ratingItemReader(S3CsvService s3CsvService) {
         return new FlatFileItemReaderBuilder<Rating>()
                 .name("ratingItemReader")
-                .resource(new ClassPathResource("ratings.csv"))
+                .resource(s3CsvService.getLatestFile("ratings"))
                 .linesToSkip(1)
                 .delimited()
                 .names("userId", "movieId", "rating", "timestamp")
@@ -104,7 +106,7 @@ public class BatchConfig {
     public Step ratingStep(){
         return new StepBuilder("ratingStep", jobRepository)
                 .<Rating, Rating>chunk(100, transactionManager)
-                .reader(ratingItemReader())
+                .reader(ratingItemReader(s3CsvService))
                 .processor(ratingItemProcessor())
                 .writer(ratingItemWriter())
                 .build();
@@ -125,7 +127,7 @@ public class BatchConfig {
 
     @Bean
     public MovieItemProcessor movieItemProcessor() {
-        return new MovieItemProcessor();
+        return new MovieItemProcessor(movieRepository);
     }
 
     @Bean

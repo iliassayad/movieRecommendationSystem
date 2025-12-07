@@ -1,23 +1,38 @@
 package net.ayad.ingestionservice.config;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.ayad.ingestionservice.entity.Link;
 import net.ayad.ingestionservice.entity.Movie;
+import net.ayad.ingestionservice.repository.MovieRepository;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
+@RequiredArgsConstructor
 public class MovieItemProcessor implements ItemProcessor<Link, Movie> {
 
+    private final MovieRepository movieRepository;
     private final RestTemplate restTemplate = new RestTemplate();
-    private final String apiKey = "b0daa83031baf108d93339b4a8e704df";
+
+
+    @Value("${tmdb.api.key}")
+    private String apiKey;
 
 
     @Override
     public Movie process(Link link) throws Exception {
         if (link.getTmdbId() == null) {
-            System.out.println("Skipping movieId=" + link.getMovieId() + " because tmdbId is null");
+            log.error("TMDB ID is null");
+            return null; // IMPORTANT : skip
+        }
+        if (movieRepository.findByMovieId(link.getMovieId()).isPresent()) {
+            log.error("Movie already exists");
+            System.out.println("Skipping movieId=" + link.getMovieId() + " because it already exists in the database");
             return null; // IMPORTANT : skip
         }
         String url = "https://api.themoviedb.org/3/movie/" + link.getTmdbId() + "?api_key=" + apiKey;
