@@ -30,11 +30,6 @@ public class MovieItemProcessor implements ItemProcessor<Link, Movie> {
             log.error("TMDB ID is null");
             return null; // IMPORTANT : skip
         }
-        if (movieRepository.findByMovieId(link.getMovieId()).isPresent()) {
-            log.error("Movie already exists");
-            System.out.println("Skipping movieId=" + link.getMovieId() + " because it already exists in the database");
-            return null; // IMPORTANT : skip
-        }
         String url = "https://api.themoviedb.org/3/movie/" + link.getTmdbId() + "?api_key=" + apiKey;
 
         Map<String, Object> response = restTemplate.getForObject(url, Map.class);

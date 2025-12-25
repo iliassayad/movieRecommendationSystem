@@ -1,7 +1,10 @@
 package net.ayad.ingestionservice.config;
 
 
+import com.mongodb.client.MongoClient;
 import lombok.RequiredArgsConstructor;
+import net.ayad.ingestionservice.config.batchListeners.ChunkProgressListener;
+import net.ayad.ingestionservice.config.batchListeners.StepProgressListener;
 import net.ayad.ingestionservice.entity.Link;
 import net.ayad.ingestionservice.entity.Movie;
 import net.ayad.ingestionservice.entity.Rating;
@@ -11,9 +14,11 @@ import net.ayad.ingestionservice.repository.RatingRepository;
 import net.ayad.ingestionservice.service.S3CsvService;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.item.data.MongoItemWriter;
 import org.springframework.batch.item.data.RepositoryItemReader;
 import org.springframework.batch.item.data.RepositoryItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
@@ -23,6 +28,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.client.HttpClientErrorException;
 
@@ -33,6 +39,8 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class BatchConfig {
 
+    private final TempFileCleanupListener cleanupListener;
+
     private final S3CsvService s3CsvService;
     private final MovieRepository movieRepository;
     private final LinkRepository linkRepository;
@@ -40,11 +48,22 @@ public class BatchConfig {
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
 
+    private final MongoTemplate mongoTemplate;
+
+    //Writers
+    private final LinkBulkUpsertWriter linkBulkUpsertWriter;
+    private final RatingBulkUpsertWriter ratingBulkUpsertWriter;
+    private final MovieBulkUpsertWriter movieBulkUpsertWriter;
+
+    //Listeners
+    private final StepProgressListener stepProgressListener;
+    private final ChunkProgressListener chunkProgressListener;
+
     @Bean
     public FlatFileItemReader<Link> linkItemReader(S3CsvService s3CsvService) {
         return new FlatFileItemReaderBuilder<Link>()
                 .name("linkItemReader")
-                .resource(s3CsvService.getLatestFile("links"))
+                .resource(s3CsvService.downloadLatestFileToLocal("links"))
                 .linesToSkip(1)
                 .delimited()
                 .names("movieId", "imdbId", "tmdbId")
@@ -59,21 +78,30 @@ public class BatchConfig {
     }
 
 
+//    @Bean
+//    public RepositoryItemWriter<Link> repositoryItemWriter() {
+//        RepositoryItemWriter<Link> writer = new RepositoryItemWriter<>();
+//        writer.setRepository(linkRepository);
+//        writer.setMethodName("saveAll");
+//        return writer;
+//    }
+
     @Bean
-    public RepositoryItemWriter<Link> repositoryItemWriter() {
-        RepositoryItemWriter<Link> writer = new RepositoryItemWriter<>();
-        writer.setRepository(linkRepository);
-        writer.setMethodName("save");
+    public MongoItemWriter<Link> mongoLinkItemWriter() {
+        MongoItemWriter<Link> writer = new MongoItemWriter<>();
+        writer.setTemplate(mongoTemplate); // Inject MongoTemplate if needed
+        writer.setCollection("links");
         return writer;
     }
 
     @Bean
     public Step linkStep(){
         return new StepBuilder("linkStep", jobRepository)
-                .<Link, Link>chunk(100, transactionManager)
+                .<Link, Link>chunk(2000, transactionManager)
                 .reader(linkItemReader(s3CsvService))
-                .processor(linkItemProcessor())
-                .writer(repositoryItemWriter())
+                .writer(linkBulkUpsertWriter)
+                .listener(chunkProgressListener)
+                .listener(stepProgressListener)
                 .build();
     }
 
@@ -81,7 +109,7 @@ public class BatchConfig {
     public FlatFileItemReader<Rating> ratingItemReader(S3CsvService s3CsvService) {
         return new FlatFileItemReaderBuilder<Rating>()
                 .name("ratingItemReader")
-                .resource(s3CsvService.getLatestFile("ratings"))
+                .resource(s3CsvService.downloadLatestFileToLocal("ratings"))
                 .linesToSkip(1)
                 .delimited()
                 .names("userId", "movieId", "rating", "timestamp")
@@ -94,21 +122,30 @@ public class BatchConfig {
         return new RatingItemProcessor(ratingRepository);
     }
 
+//    @Bean
+//    public RepositoryItemWriter<Rating> ratingItemWriter() {
+//        RepositoryItemWriter<Rating> writer = new RepositoryItemWriter<>();
+//        writer.setRepository(ratingRepository);
+//        writer.setMethodName("saveAll");
+//        return writer;
+//    }
+
     @Bean
-    public RepositoryItemWriter<Rating> ratingItemWriter() {
-        RepositoryItemWriter<Rating> writer = new RepositoryItemWriter<>();
-        writer.setRepository(ratingRepository);
-        writer.setMethodName("save");
+    public MongoItemWriter<Rating> mongoRatingItemWriter() {
+        MongoItemWriter<Rating> writer = new MongoItemWriter<>();
+        writer.setTemplate(mongoTemplate); // Inject MongoTemplate if needed
+        writer.setCollection("ratings");
         return writer;
     }
 
     @Bean
     public Step ratingStep(){
         return new StepBuilder("ratingStep", jobRepository)
-                .<Rating, Rating>chunk(100, transactionManager)
+                .<Rating, Rating>chunk(50, transactionManager)
                 .reader(ratingItemReader(s3CsvService))
-                .processor(ratingItemProcessor())
-                .writer(ratingItemWriter())
+                .writer(ratingBulkUpsertWriter)
+                .listener(chunkProgressListener)
+                .listener(stepProgressListener)
                 .build();
     }
 
@@ -130,21 +167,31 @@ public class BatchConfig {
         return new MovieItemProcessor(movieRepository);
     }
 
+//    @Bean
+//    public RepositoryItemWriter<Movie> movieItemWriter() {
+//        RepositoryItemWriter<Movie> writer = new RepositoryItemWriter<>();
+//        writer.setRepository(movieRepository);
+//        writer.setMethodName("saveAll");
+//        return writer;
+//    }
+
     @Bean
-    public RepositoryItemWriter<Movie> movieItemWriter() {
-        RepositoryItemWriter<Movie> writer = new RepositoryItemWriter<>();
-        writer.setRepository(movieRepository);
-        writer.setMethodName("save");
+    public MongoItemWriter<Movie> mongoMovieItemWriter() {
+        MongoItemWriter<Movie> writer = new MongoItemWriter<>();
+        writer.setTemplate(mongoTemplate); // Inject MongoTemplate if needed
+        writer.setCollection("movies");
         return writer;
     }
 
     @Bean
     public Step movieStep(){
         return new StepBuilder("movieStep", jobRepository)
-                .<Link, Movie>chunk(50, transactionManager)
+                .<Link, Movie>chunk(100, transactionManager)
                 .reader(movieItemReader())
                 .processor(movieItemProcessor())
-                .writer(movieItemWriter())
+                .writer(movieBulkUpsertWriter)
+                .listener(chunkProgressListener)
+                .listener(stepProgressListener)
                 .faultTolerant()
                 .skip(HttpClientErrorException.class)
                 .skipLimit(Integer.MAX_VALUE)
@@ -157,6 +204,7 @@ public class BatchConfig {
                 .start(linkStep())
                 .next(ratingStep())
                 .next(movieStep())
+                .listener(cleanupListener)
                 .build();
     }
 }

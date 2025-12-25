@@ -28,6 +28,25 @@ services:
     ports:
       - "8081:8080"
 
+  prepocessing-service:
+    image: preprocessing-service:latest
+    container_name: preprocessing-service
+    build:
+      context: ./preprocessing-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      - mongodb
+    networks:
+      - movie-recommendation-network
+    ports:
+      - "8082:8000"
+    volumes:
+      - ./preprocessing-service/data:/app/output  
+   
+
 networks:
   movie-recommendation-network:
     driver: bridge
