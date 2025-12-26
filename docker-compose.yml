@@ -35,8 +35,6 @@ services:
       context: ./preprocessing-service
       dockerfile: Dockerfile
     restart: unless-stopped
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
     depends_on:
       - mongodb
     networks:
@@ -45,6 +43,23 @@ services:
       - "8082:8000"
     volumes:
       - ./preprocessing-service/data:/app/output  
+  training-service:
+    image: training-service:latest
+    container_name: training-service
+    build:
+      context: ./training-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    # depends_on:
+    #   - preprocessing-service
+    ports:
+      - "8083:8000"   
+    environment:
+      INPUT_CSV: /app/input/ratings_als.csv
+      MODEL_PATH: /app/model/als_model     
+    volumes:
+      - ./preprocessing-service/data:/app/input  
+      - ./training-service/model:/app/model
    
 
 networks:
