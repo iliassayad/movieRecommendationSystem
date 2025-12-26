@@ -42,7 +42,7 @@ services:
     ports:
       - "8082:8000"
     volumes:
-      - ./preprocessing-service/data:/app/output  
+      - ./preprocessing-service/data:/app/output
   training-service:
     image: training-service:latest
     container_name: training-service
@@ -53,14 +53,28 @@ services:
     # depends_on:
     #   - preprocessing-service
     ports:
-      - "8083:8000"   
+      - "8083:8000"
     environment:
       INPUT_CSV: /app/input/ratings_als.csv
-      MODEL_PATH: /app/model/als_model     
+      MODEL_PATH: /app/model/als_model
     volumes:
-      - ./preprocessing-service/data:/app/input  
+      - ./preprocessing-service/data:/app/input
       - ./training-service/model:/app/model
-   
+
+  recommendation-service:
+    build:
+      context: ./recommendation-service
+      dockerfile: Dockerfile
+    container_name: recommendation-service
+    restart: unless-stopped
+    depends_on:
+      - training-service
+    networks:
+      - movie-recommendation-network
+    volumes:
+      - ./training-service/model:/app/model
+    ports:
+      - "8084:8000"
 
 networks:
   movie-recommendation-network:
@@ -68,4 +82,3 @@ networks:
 
 volumes:
   mongo-data-ingestion-volume:
-
