@@ -5,7 +5,7 @@ router = APIRouter()
 service = PreprocessingService()
 
 
-@router.post("/preprocessing/run")
+@router.post("/preprocessing")
 def run_preprocessing():
     output = service.run()
     return {

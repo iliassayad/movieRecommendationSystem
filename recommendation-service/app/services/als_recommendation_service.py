@@ -18,6 +18,33 @@ class ALSRecommendationService:
         user_df = self.spark.createDataFrame([(user_id,)], ["userId"])
         recommendations = self.model.recommendForUserSubset(user_df, num_recommendations)
         recs = recommendations.collect()
-        if recs:
-            return [(row.movieId, row.rating) for row in recs[0].recommendations]
-        return []
+        
+        if not recs:
+            return {
+                "userId": int(user_id),
+                "recommendations": []
+            }
+        
+        # Transformer la colonne 'recommendations' en liste de dictionnaires
+        formatted_recommendations = [
+            {
+                "movieId": int(rec.movieId),
+                "score": float(rec.rating)
+            }
+            for rec in recs[0].recommendations
+        ]
+        
+        return {
+            "userId": int(user_id),
+            "recommendations": formatted_recommendations
+        }
+        
+        # // Exemple de retour :
+        # // {
+        # //     "userId": 123,
+        # //     "recommendations": [
+        # //         {"movieId": 456, "score": 4.5},  
+        # //         {"movieId": 789, "score": 4.0}
+        # //     ]
+        
+        # // }    

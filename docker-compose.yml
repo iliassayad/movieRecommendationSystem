@@ -23,12 +23,13 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
     depends_on:
       - mongodb
+      - discovery-service
     networks:
       - movie-recommendation-network
     ports:
       - "8081:8080"
 
-  prepocessing-service:
+  preprocessing-service:
     image: preprocessing-service:latest
     container_name: preprocessing-service
     build:
@@ -37,6 +38,7 @@ services:
     restart: unless-stopped
     depends_on:
       - mongodb
+      - discovery-service
     networks:
       - movie-recommendation-network
     ports:
@@ -50,8 +52,10 @@ services:
       context: ./training-service
       dockerfile: Dockerfile
     restart: unless-stopped
-    # depends_on:
-    #   - preprocessing-service
+    depends_on:
+       - discovery-service
+    networks:
+      - movie-recommendation-network
     ports:
       - "8083:8000"
     environment:
@@ -69,12 +73,61 @@ services:
     restart: unless-stopped
     depends_on:
       - training-service
+      - discovery-service
     networks:
       - movie-recommendation-network
     volumes:
       - ./training-service/model:/app/model
     ports:
       - "8084:8000"
+
+  movieBFF-service:
+    image: moviebff-service:latest
+    container_name: movieBFF-service
+    build:
+      context: ./MovieBFFService
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      - discovery-service
+    networks:
+      - movie-recommendation-network
+    ports:
+      - "8085:8085"
+
+  discovery-service:
+    image: discovery-service:latest
+    container_name: discovery-service
+    build:
+      context: ./discovery-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    networks:
+        - movie-recommendation-network
+    ports:
+      - "8761:8761"
+  gateway-service:
+    image: gateway-service:latest
+    container_name: gateway-service
+    build:
+      context: ./gateway-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      - discovery-service
+      - ingestion-service
+      - preprocessing-service
+      - training-service
+      - recommendation-service
+      - movieBFF-service
+    networks:
+      - movie-recommendation-network
+    ports:
+      - "8888:8888"
 
 networks:
   movie-recommendation-network:
