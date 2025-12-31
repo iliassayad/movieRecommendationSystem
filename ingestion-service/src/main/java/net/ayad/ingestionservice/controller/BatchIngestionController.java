@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/batch-ingestion")
+@RequestMapping("/ingestion")
 public class BatchIngestionController {
 
 
