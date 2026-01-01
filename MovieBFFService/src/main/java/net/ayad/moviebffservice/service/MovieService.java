@@ -6,6 +6,9 @@ import net.ayad.moviebffservice.feign.RecommendationRestClient;
 import net.ayad.moviebffservice.model.MovieDTO;
 import net.ayad.moviebffservice.model.RecommendationDTO;
 import net.ayad.moviebffservice.model.UserRecommendRequest;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,12 +29,28 @@ public class MovieService {
         return recommendationRestClient.recommend(request);
     }
 
-    public List<MovieDTO> provideRecommendations(UserRecommendRequest request) {
+    public List<MovieDTO> provideRecommendations() {
+        UserRecommendRequest request = new UserRecommendRequest(getCurrentUserId(), 10);
+        System.out.println("Requesting recommendations for user ID: " + request.userId());
         RecommendationDTO recommendations = getRecommendationsForUserFromRecommendationService(request);
         return recommendations.recommendations().stream()
                 .map(recommendation -> getMovieByMovieId(recommendation.movieId()))
                 .toList();
     }
+
+
+    public Long getCurrentUserId() {
+        Authentication auth = SecurityContextHolder
+                .getContext()
+                .getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new AccessDeniedException("Unauthenticated");
+        }
+
+        return Long.valueOf(auth.getPrincipal().toString());
+    }
+
 
 
 

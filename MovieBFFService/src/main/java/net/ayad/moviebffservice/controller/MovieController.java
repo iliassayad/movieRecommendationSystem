@@ -22,8 +22,8 @@ public class MovieController {
 
 
     @PostMapping("/recommend")
-    public ResponseEntity<List<MovieDTO>> getRecommendationsForUser(@RequestBody UserRecommendRequest request) {
-        List<MovieDTO> recommendedMovies = movieService.provideRecommendations(request);
+    public ResponseEntity<List<MovieDTO>> getRecommendationsForUser() {
+        List<MovieDTO> recommendedMovies = movieService.provideRecommendations();
         return ResponseEntity.ok(recommendedMovies);
     }
 }

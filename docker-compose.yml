@@ -12,6 +12,36 @@ services:
       - mongo-data-ingestion-volume:/data/db
     ports:
       - "27017:27017"
+
+  mysql-db:
+    image: mysql:latest
+    container_name: auth-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: iliass
+      MYSQL_DATABASE: auth_db
+      MYSQL_USER: iliass
+      MYSQL_PASSWORD: iliass
+    networks:
+      - movie-recommendation-network
+
+  auth-service:
+    image: auth-service:latest
+    container_name: auth-service
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      - mysql-db
+      - discovery-service
+    networks:
+      - movie-recommendation-network
+    ports:
+      - "8086:8080"
+
   ingestion-service:
     image: ingestion-service:latest
     container_name: ingestion-service

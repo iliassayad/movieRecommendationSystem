@@ -10,23 +10,37 @@ spring:
               uri: lb://ingestion-service
               predicates:
                 - Path=/ingestion/**
+              filters:
+                - AuthenticationFilter
             - id: preprocessing-service
               uri: lb://preprocessing-service
               predicates:
                 - Path=/preprocessing/**
+              filters:
+                - AuthenticationFilter
             - id: training-service
               uri: lb://training-service
               predicates:
                 - Path=/training/**
+              filters:
+                - AuthenticationFilter
             - id: recommendation-service
               uri: lb://recommendation-service
               predicates:
                 - Path=/recommendations/**
-
+              filters:
+                - AuthenticationFilter
             - id: movieBFF-service
               uri: lb://movieBFF-service
               predicates:
                 - Path=/movies/**
+              filters:
+                - AuthenticationFilter
+
+            - id: auth-service
+              uri: lb://auth-service
+              predicates:
+                - Path=/auth/**
 server:
   port: 8888
 
