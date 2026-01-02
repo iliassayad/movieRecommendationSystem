@@ -1,41 +1,32 @@
-package net.ayad.ingestionservice.entity;
+package net.ayad.ingestionservice.dto;
 
-import lombok.*;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
-
-@Document(collection = "movies")
-@Getter
-@Setter
+@Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-public class Movie {
-
-    private String id;
-
-    @Indexed(unique = true)
-    private Long movieId; // MovieLens ID
-
+public class MovieDetailDTO {
+    private Long movieId;
     private Long tmdbId;
     private String imdbId;
 
-
-    // Données de base
     private String title;
     private String originalTitle;
     private String overview;
     private String tagline;
 
-    // Métadonnées
+    // Dates et durée
     private String releaseDate;
     private Integer runtime;
     private String status;
+
+    // Financier
     private Long budget;
     private Long revenue;
 
@@ -45,7 +36,7 @@ public class Movie {
     private Double popularity;
 
     // Genres et langues
-    private List<Long> genreIds; // Map of genre ID to genre name
+    private List<GenreDTO> genres;
     private String originalLanguage;
     private List<String> spokenLanguages;
 
@@ -53,6 +44,6 @@ public class Movie {
     private String posterPath;
     private String backdropPath;
 
-    // Métadonnées d'enrichissement
+    // Métadonnées
     private Boolean adult;
 }

@@ -1,16 +1,32 @@
 package net.ayad.ingestionservice.dto;
 
-import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-public record MovieDTO(
-        Long movieId,
-        String title,
-        String overview,
-        String releaseDate,
-        Integer runtime,
-        List<String> genres,
-        String originalLanguage,
-        String posterPath,
-        Boolean adult
-) {
+import java.util.List;
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class MovieDTO {
+    private Long movieId;
+    private String title;
+    private String overview;
+
+    private String releaseDate;
+
+    private Double voteAverage;
+    private Integer voteCount;
+    private Double popularity;
+
+    private String posterPath;
+    private String backdropPath;
+
+    private List<Long> genreIds;
+    private List<String> genreNames;
+
+    private String originalLanguage;
+
 }

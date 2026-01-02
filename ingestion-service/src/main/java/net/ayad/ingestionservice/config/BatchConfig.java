@@ -8,6 +8,7 @@ import net.ayad.ingestionservice.config.batchListeners.StepProgressListener;
 import net.ayad.ingestionservice.entity.Link;
 import net.ayad.ingestionservice.entity.Movie;
 import net.ayad.ingestionservice.entity.Rating;
+import net.ayad.ingestionservice.repository.GenreRepository;
 import net.ayad.ingestionservice.repository.LinkRepository;
 import net.ayad.ingestionservice.repository.MovieRepository;
 import net.ayad.ingestionservice.repository.RatingRepository;
@@ -43,6 +44,7 @@ public class BatchConfig {
 
     private final S3CsvService s3CsvService;
     private final MovieRepository movieRepository;
+    private final GenreRepository genreRepository;
     private final LinkRepository linkRepository;
     private final RatingRepository ratingRepository;
     private final JobRepository jobRepository;
@@ -162,10 +164,15 @@ public class BatchConfig {
         return reader;
     }
 
+
     @Bean
-    public MovieItemProcessor movieItemProcessor() {
-        return new MovieItemProcessor(movieRepository);
+    public MovieItemProcessor movieItemProcessor(
+            MovieRepository movieRepository,
+            GenreRepository genreRepository
+    ) {
+        return new MovieItemProcessor(movieRepository, genreRepository);
     }
+
 
 //    @Bean
 //    public RepositoryItemWriter<Movie> movieItemWriter() {
@@ -188,7 +195,7 @@ public class BatchConfig {
         return new StepBuilder("movieStep", jobRepository)
                 .<Link, Movie>chunk(100, transactionManager)
                 .reader(movieItemReader())
-                .processor(movieItemProcessor())
+                .processor(movieItemProcessor(movieRepository, genreRepository))
                 .writer(movieBulkUpsertWriter)
                 .listener(chunkProgressListener)
                 .listener(stepProgressListener)

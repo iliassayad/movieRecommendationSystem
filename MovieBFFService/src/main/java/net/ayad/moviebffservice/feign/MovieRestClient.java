@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
-@FeignClient(name = "INGESTION-SERVICE", path = "/ingestion")
+@FeignClient(name = "INGESTION-SERVICE", path = "/api/v1/movies")
 public interface MovieRestClient {
 
     @GetMapping

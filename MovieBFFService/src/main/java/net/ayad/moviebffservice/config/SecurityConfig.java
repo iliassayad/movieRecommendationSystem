@@ -30,7 +30,9 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth ->
-                        auth.anyRequest().authenticated()
+                        auth
+                                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                                .anyRequest().authenticated()
                 )
                 .addFilterBefore(gatewaySecurityFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
 

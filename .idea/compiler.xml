@@ -19,7 +19,7 @@
         </processorPath>
         <module name="MovieBFFService" />
       </profile>
-      <profile name="Annotation profile for ingestion-service" enabled="true">
+      <profile name="Annotation profile for auth-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -28,8 +28,8 @@
           <entry name="$MAVEN_REPOSITORY$/org/mapstruct/mapstruct-processor/1.6.3/mapstruct-processor-1.6.3.jar" />
           <entry name="$MAVEN_REPOSITORY$/org/mapstruct/mapstruct/1.6.3/mapstruct-1.6.3.jar" />
         </processorPath>
-        <module name="ingestion-service" />
         <module name="auth-service" />
+        <module name="ingestion-service" />
       </profile>
     </annotationProcessing>
   </component>

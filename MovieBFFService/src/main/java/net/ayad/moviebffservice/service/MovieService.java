@@ -6,6 +6,7 @@ import net.ayad.moviebffservice.feign.RecommendationRestClient;
 import net.ayad.moviebffservice.model.MovieDTO;
 import net.ayad.moviebffservice.model.RecommendationDTO;
 import net.ayad.moviebffservice.model.UserRecommendRequest;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,6 +30,7 @@ public class MovieService {
         return recommendationRestClient.recommend(request);
     }
 
+    @Cacheable(value = "user-recommendations", key = "#root.methodName + '_' + #root.target.getCurrentUserId()")
     public List<MovieDTO> provideRecommendations() {
         UserRecommendRequest request = new UserRecommendRequest(getCurrentUserId(), 10);
         System.out.println("Requesting recommendations for user ID: " + request.userId());

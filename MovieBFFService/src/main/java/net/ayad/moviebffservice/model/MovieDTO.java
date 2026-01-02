@@ -6,11 +6,19 @@ public record MovieDTO(
         Long movieId,
         String title,
         String overview,
+
         String releaseDate,
-        Integer runtime,
-        List<String> genres,
-        String originalLanguage,
+
+        Double voteAverage,
+        Integer voteCount,
+        Double popularity,
+
         String posterPath,
-        Boolean adult
+        String backdropPath,
+
+        List<Long> genreIds,
+        List<String> genreNames,
+
+        String originalLanguage
 ) {
 }

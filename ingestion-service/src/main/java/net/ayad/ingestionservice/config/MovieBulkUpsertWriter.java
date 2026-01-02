@@ -43,7 +43,7 @@ public class MovieBulkUpsertWriter implements ItemWriter<Movie> {
                     .set("voteAverage", movie.getVoteAverage())
                     .set("voteCount", movie.getVoteCount())
                     .set("popularity", movie.getPopularity())
-                    .set("genres", movie.getGenres())
+                    .set("genreIds", movie.getGenreIds())
                     .set("originalLanguage", movie.getOriginalLanguage())
                     .set("spokenLanguages", movie.getSpokenLanguages())
                     .set("posterPath", movie.getPosterPath())
