@@ -214,13 +214,13 @@ const MovieDetail = () => {
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
                         key={star}
-                        onClick={() => handleRating(star * 2)}
+                        onClick={() => handleRating(star)}
                         disabled={submittingRating}
                         className="transform hover:scale-110 transition-transform disabled:opacity-50"
                       >
                         <Star
                           className={`w-10 h-10 ${
-                            star * 2 <= rating
+                            star <= rating
                               ? 'text-yellow-400 fill-yellow-400'
                               : 'text-gray-600'
                           }`}
